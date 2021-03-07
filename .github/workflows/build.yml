@@ -40,11 +40,11 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build artifacts
       run: |
-        docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=darwin golang:alpine -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
-        docker run --rm -v $PWD:/app -e GOARCH=arm64 -e GOOS=darwin golang:alpine -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
-        docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=linux golang:alpine -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-linux-amd64
-        docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=windows golang:alpine -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
-        docker run --rm -v $PWD:/app -e GOARCH=386 -e GOOS=windows golang:alpine -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
+        docker run --rm -v $PWD:/app -e CGO_ENABLED=0 -e GOARCH=amd64 -e GOOS=darwin golang:alpine go build -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
+        docker run --rm -v $PWD:/app -e CGO_ENABLED=0 -e GOARCH=arm64 -e GOOS=darwin golang:alpine go build -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
+        docker run --rm -v $PWD:/app -e CGO_ENABLED=0 -e GOARCH=amd64 -e GOOS=linux golang:alpine go build -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-linux-amd64
+        docker run --rm -v $PWD:/app -e CGO_ENABLED=0 -e GOARCH=amd64 -e GOOS=windows golang:alpine go build -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
+        docker run --rm -v $PWD:/app -e CGO_ENABLED=0 -e GOARCH=386 -e GOOS=windows golang:alpine go build -o /app/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
     - uses: meeDamian/github-release@v2.0.3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
