@@ -19,7 +19,7 @@ jobs:
           echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
           echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
           echo ::set-output name=REPO::${GITHUB_REPOSITORY#luketainton/}
-          echo ::set-output name=LREPO::${GITHUB_REPOSITORY#luketainton/ | tr '[:upper:]' '[:lower:]'}
+          echo ::set-output name=LREPO::${GITHUB_REPOSITORY#luketainton/} | tr '[:upper:]' '[:lower:]'
 
   docker:
     name: GitHub Package Registry
@@ -55,8 +55,8 @@ jobs:
         tag: ${{ needs.prepare-data.outputs.tag }}
         gzip: false
         files: >
-          $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
-          $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
-          $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-linux-amd64
-          $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
-          $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
+          CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
+          CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
+          CatFacts-${{ needs.prepare-data.outputs.tag }}-linux-amd64
+          CatFacts-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
+          CatFacts-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
