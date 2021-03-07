@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// CatFact is the information from API
+// CatFact is the information provided by the cat-fact API
 type CatFact struct {
 	Text string `json:"text"`
 }
