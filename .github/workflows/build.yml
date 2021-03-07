@@ -10,6 +10,7 @@ jobs:
     outputs:
       tag: ${{ steps.prepare.outputs.SOURCE_TAG }}
       repo: ${{ steps.prepare.outputs.REPO }}
+      lrepo: ${{ steps.prepare.outputs.LREPO }}
     steps:
       - id: prepare
         name: Prepare environment variables
@@ -18,6 +19,7 @@ jobs:
           echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
           echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
           echo ::set-output name=REPO::${GITHUB_REPOSITORY#luketainton/}
+          echo ::set-output name=LREPO::${GITHUB_REPOSITORY#luketainton/ | tr '[:upper:]' '[:lower:]'}
 
   docker:
     name: GitHub Package Registry
@@ -28,11 +30,11 @@ jobs:
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.PAT }} | docker login ghcr.io -u luketainton --password-stdin
     - name: Build image for GitHub Package Registry
-      run: docker build . --file Dockerfile --tag ghcr.io/luketainton/${{ needs.prepare-data.outputs.repo }}:${{ needs.prepare-data.outputs.tag }} --tag ghcr.io/luketainton/${{ needs.prepare-data.outputs.repo }}:latest
+      run: docker build . --file Dockerfile --tag ghcr.io/luketainton/${{ needs.prepare-data.outputs.lrepo }}:${{ needs.prepare-data.outputs.tag }} --tag ghcr.io/luketainton/${{ needs.prepare-data.outputs.lrepo }}:latest
     - name: Push image to GitHub Package Registry
       run: |
-        docker push ghcr.io/luketainton/${{ needs.prepare-data.outputs.repo }}:latest
-        docker push ghcr.io/luketainton/${{ needs.prepare-data.outputs.repo }}:${{ needs.prepare-data.outputs.tag }}
+        docker push ghcr.io/luketainton/${{ needs.prepare-data.outputs.lrepo }}:latest
+        docker push ghcr.io/luketainton/${{ needs.prepare-data.outputs.lrepo }}:${{ needs.prepare-data.outputs.tag }}
   
   build:
     name: Build and Release
@@ -51,6 +53,7 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ needs.prepare-data.outputs.tag }}
+        gzip: false
         files: >
           $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
           $PWD/CatFacts-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
