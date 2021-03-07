@@ -1,0 +1,57 @@
+name: Build
+on:
+  push:
+    tags: '*'
+
+jobs:
+  prepare-data:
+    name: Prepare Data
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.prepare.outputs.SOURCE_TAG }}
+    steps:
+      - id: prepare
+        name: Prepare environment variables
+        run: |
+          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
+          echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
+          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+
+  docker:
+    name: GitHub Package Registry
+    runs-on: ubuntu-latest
+    needs: [prepare-data]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Login to GitHub Package Registry
+      run: echo ${{ secrets.PAT }} | docker login ghcr.io -u luketainton --password-stdin
+    - name: Build image for GitHub Package Registry
+      run: docker build . --file Dockerfile --tag ghcr.io/luketainton/redirector:${{ needs.prepare-data.outputs.tag }} --tag ghcr.io/luketainton/redirector:latest
+    - name: Push image to GitHub Package Registry
+      run: |
+        docker push ghcr.io/luketainton/redirector:latest
+        docker push ghcr.io/luketainton/redirector:${{ needs.prepare-data.outputs.tag }}
+  
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    needs: [prepare-data]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build artifacts
+    run: |
+      docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=darwin golang:alpine -o /app/app-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
+      docker run --rm -v $PWD:/app -e GOARCH=arm64 -e GOOS=darwin golang:alpine -o /app/app-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
+      docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=linux golang:alpine -o /app/app-${{ needs.prepare-data.outputs.tag }}-linux-amd64
+      docker run --rm -v $PWD:/app -e GOARCH=amd64 -e GOOS=windows golang:alpine -o /app/app-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
+      docker run --rm -v $PWD:/app -e GOARCH=386 -e GOOS=windows golang:alpine -o /app/app-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
+    - uses: meeDamian/github-release@v2.0.3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ needs.prepare-data.outputs.tag }}
+        files: >
+          $PWD/app-${{ needs.prepare-data.outputs.tag }}-darwin-amd64
+          $PWD/app-${{ needs.prepare-data.outputs.tag }}-darwin-arm64
+          $PWD/app-${{ needs.prepare-data.outputs.tag }}-linux-amd64
+          $PWD/app-${{ needs.prepare-data.outputs.tag }}-win-amd64.exe
+          $PWD/app-${{ needs.prepare-data.outputs.tag }}-win-x86.exe
